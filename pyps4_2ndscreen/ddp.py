@@ -104,16 +104,16 @@ class DDPProtocol(asyncio.DatagramProtocol):
                 if callback is not None:
                     callback()
 
-    def datagram_received(self, data, addr):
+    async def datagram_received(self, data, addr):
         """When data is received."""
         if data is not None:
             sock = self._transport.get_extra_info('socket')
             _LOGGER.debug(
                 "RECV MSG @ DDP Proto DPORT=%s SRC=%s",
                 sock.getsockname()[1], addr)
-            self._handle(data, addr)
+            await self._handle(data, addr)
 
-    def _handle(self, data, addr):
+    async def _handle(self, data, addr):
         data = parse_ddp_response(data.decode('utf-8'))
         data[u'host-ip'] = addr[0]
 
@@ -127,7 +127,7 @@ class DDPProtocol(asyncio.DatagramProtocol):
                 ps4.status = data
                 if old_status != data:
                     _LOGGER.debug("Status: %s", ps4.status)
-                    callback()
+                    await callback()
                     # Status changed from OK to Standby/Turned Off
                     if old_status is not None and \
                             old_status.get('status_code') == STATUS_OK and \
